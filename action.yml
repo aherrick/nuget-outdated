@@ -20,7 +20,7 @@ runs:
     - name: Run NuGet Checker
       shell: bash
       run: |
-        dotnet run --project "${{ github.action_path }}/src/NugetChecker/NugetChecker.csproj" -- --ignore "${{ inputs.ignore }}" --includeprelease "${{ inputs.includeprelease }}"
+        dotnet run --project "${{ github.action_path }}/src/NugetOutdated/NugetOutdated.csproj" -- --ignore "${{ inputs.ignore }}" --includeprelease "${{ inputs.includeprelease }}"
 branding:
   icon: 'package'
   color: 'blue'

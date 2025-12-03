@@ -7,10 +7,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using Moq.Protected;
-using NugetChecker;
+using NugetOutdated;
 using Xunit;
 
-namespace NugetChecker.Tests;
+namespace NugetOutdated.Tests;
 
 public class CheckerTests : IDisposable
 {

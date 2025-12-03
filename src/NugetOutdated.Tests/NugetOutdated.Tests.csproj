@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NugetChecker\NugetChecker.csproj" />
+    <ProjectReference Include="..\NugetOutdated\NugetOutdated.csproj" />
   </ItemGroup>
 
 </Project>

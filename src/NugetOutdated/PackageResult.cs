@@ -1,4 +1,4 @@
-namespace NugetChecker;
+namespace NugetOutdated;
 
 public class PackageResult
 {

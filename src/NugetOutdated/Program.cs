@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Web;
 using NuGet.Versioning;
-using NugetChecker;
+using NugetOutdated;
 
 // Parse arguments
 string ignoreQuery = "";

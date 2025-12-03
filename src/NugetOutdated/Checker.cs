@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using NuGet.Versioning;
 
-namespace NugetChecker;
+namespace NugetOutdated;
 
 public class Checker
 {

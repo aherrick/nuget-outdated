@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="action.yml" />
+    <File Path="LICENSE" />
+  </Folder>
+  <Project Path="src\NugetOutdated\NugetOutdated.csproj" />
+  <Project Path="src\NugetOutdated.Tests\NugetOutdated.Tests.csproj" />
+</Solution>
