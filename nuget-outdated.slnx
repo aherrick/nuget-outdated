@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="action.yml" />
+    <File Path="LICENSE" />
+  </Folder>
+  <Project Path="src\NugetChecker\NugetChecker.csproj" />
+  <Project Path="src\NugetChecker.Tests\NugetChecker.Tests.csproj" />
+</Solution>
