@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="NuGet.Versioning" Version="6.10.0" />
+    <PackageReference Include="Spectre.Console" Version="0.54.0" />
   </ItemGroup>
 
 </Project>

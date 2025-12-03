@@ -7,4 +7,5 @@ public class PackageResult
     public string CurrentVersion { get; set; }
     public string LatestVersion { get; set; }
     public bool IsUpToDate { get; set; }
+    public bool IsIgnored { get; set; }
 }

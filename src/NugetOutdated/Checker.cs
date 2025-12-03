@@ -142,6 +142,17 @@ public class Checker
                         )
                     )
                     {
+                        results.Add(
+                            new PackageResult
+                            {
+                                Project = projectName,
+                                Package = id,
+                                CurrentVersion = versionStr,
+                                LatestVersion = string.Empty,
+                                IsUpToDate = true,
+                                IsIgnored = true
+                            }
+                        );
                         continue;
                     }
 

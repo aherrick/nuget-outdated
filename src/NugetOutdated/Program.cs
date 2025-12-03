@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using System.Web;
 using NuGet.Versioning;
 using NugetOutdated;
+using Spectre.Console;
 
 // Parse arguments
 string ignoreQuery = "";
@@ -57,19 +58,37 @@ Console.WriteLine($"Checking packages in {Directory.GetCurrentDirectory()}...");
 var results = await checker.CheckAsync(Directory.GetCurrentDirectory(), ignoreList, includePrerelease);
 
 // Output Table
-Console.WriteLine();
-Console.WriteLine("| Project | Package | Current | Latest | Status |");
-Console.WriteLine("|---|---|---|---|---|");
+var table = new Table();
+table.AddColumn(nameof(PackageResult.Project));
+table.AddColumn(nameof(PackageResult.Package));
+table.AddColumn("Current");
+table.AddColumn("Latest");
+table.AddColumn("Status");
 
 bool hasFailures = false;
 foreach (var r in results)
 {
-    var status = r.IsUpToDate ? "✅" : "❌";
-    Console.WriteLine(
-        $"| {r.Project} | {r.Package} | {r.CurrentVersion} | {r.LatestVersion} | {status} |"
+    string status;
+    if (r.IsIgnored)
+    {
+        status = "[grey]🔒[/]";
+    }
+    else
+    {
+        status = r.IsUpToDate ? "[green]✅[/]" : "[red]❌[/]";
+    }
+
+    table.AddRow(
+        r.Project,
+        r.Package,
+        r.CurrentVersion,
+        r.LatestVersion,
+        status
     );
-    if (!r.IsUpToDate) hasFailures = true;
+    if (!r.IsUpToDate && !r.IsIgnored) hasFailures = true;
 }
+
+AnsiConsole.Write(table);
 
 if (hasFailures)
 {
