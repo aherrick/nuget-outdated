@@ -15,3 +15,5 @@ jobs:
 
       - name: Check for outdated NuGet packages
         uses: aherrick/nuget-outdated@main
+        with:
+            includeprelease: 'true'
