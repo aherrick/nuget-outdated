@@ -1,8 +1,13 @@
+using System.Text;
 using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using NugetOutdated;
 using NugetOutdated.Services;
 using Spectre.Console;
+
+// CI environments often report 80 columns, causing wrapping. Force a wider output.
+AnsiConsole.Profile.Width = 240;
+AnsiConsole.Profile.Encoding = Encoding.UTF8;
 
 // Parse arguments
 string ignoreQuery = "";
