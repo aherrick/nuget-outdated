@@ -20,7 +20,7 @@ public class Checker(NuGetClient nuGetClient)
 
         await Parallel.ForEachAsync(
             csprojFiles,
-            async (file, ct) =>
+            async (file, _) =>
             {
                 var projectResults = await ProcessProjectAsync(
                     file,
@@ -70,14 +70,7 @@ public class Checker(NuGetClient nuGetClient)
                     if (isIgnored)
                     {
                         results.Add(
-                            new PackageResult(
-                                projectName,
-                                id,
-                                versionStr,
-                                string.Empty,
-                                true,
-                                true
-                            )
+                            new PackageResult(projectName, id, versionStr, string.Empty, true, true)
                         );
                     }
                     continue;

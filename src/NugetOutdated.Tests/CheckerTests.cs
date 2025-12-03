@@ -22,6 +22,7 @@ public class CheckerTests : IDisposable
         {
             Directory.Delete(_testDir, true);
         }
+        GC.SuppressFinalize(this);
     }
 
     private Checker CreateChecker(string jsonResponse)
@@ -66,7 +67,7 @@ public class CheckerTests : IDisposable
     public async Task CheckAsync_IdentifiesOutdatedPackage()
     {
         // Arrange
-        var csprojContent = """
+        const string csprojContent = """
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
@@ -94,7 +95,7 @@ public class CheckerTests : IDisposable
     public async Task CheckAsync_IdentifiesUpToDatePackage()
     {
         // Arrange
-        var csprojContent = """
+        const string csprojContent = """
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
@@ -117,7 +118,7 @@ public class CheckerTests : IDisposable
     public async Task CheckAsync_SupportsCentralPackageManagement_Global()
     {
         // Arrange
-        var cpmContent = """
+        const string cpmContent = """
 <Project>
   <ItemGroup>
     <PackageVersion Include="Newtonsoft.Json" Version="12.0.1" />
@@ -126,7 +127,7 @@ public class CheckerTests : IDisposable
 """;
         File.WriteAllText(Path.Combine(_testDir, "Directory.Packages.props"), cpmContent);
 
-        var csprojContent = """
+        const string csprojContent = """
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" />
@@ -151,7 +152,7 @@ public class CheckerTests : IDisposable
     public async Task CheckAsync_SupportsCentralPackageManagement_ProjectSpecific()
     {
         // Arrange
-        var cpmContent = """
+        const string cpmContent = """
 <Project>
   <ItemGroup>
     <PackageVersion Update="Newtonsoft.Json" Version="12.0.1" Condition="'$(MSBuildProjectName)' == 'TestProject'" />
@@ -161,7 +162,7 @@ public class CheckerTests : IDisposable
 """;
         File.WriteAllText(Path.Combine(_testDir, "Directory.Packages.props"), cpmContent);
 
-        var csprojContent = """
+        const string csprojContent = """
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" />
@@ -186,7 +187,7 @@ public class CheckerTests : IDisposable
     public async Task CheckAsync_IgnoresSpecifiedPackages()
     {
         // Arrange
-        var csprojContent = """
+        const string csprojContent = """
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
@@ -220,7 +221,7 @@ public class CheckerTests : IDisposable
     public async Task CheckAsync_SupportsPreReleaseVersions()
     {
         // Arrange
-        var csprojContent = """
+        const string csprojContent = """
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
@@ -245,7 +246,7 @@ public class CheckerTests : IDisposable
     public async Task CheckAsync_IgnoredPackage_ShowsLatestVersion()
     {
         // Arrange
-        var csprojContent = """
+        const string csprojContent = """
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="Velopack" Version="0.0.1298" />
