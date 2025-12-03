@@ -1,6 +1,7 @@
 using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using NugetOutdated;
+using NugetOutdated.Services;
 using Spectre.Console;
 
 // Parse arguments
@@ -48,7 +49,8 @@ if (!string.IsNullOrWhiteSpace(ignoreQuery))
 }
 
 var services = new ServiceCollection();
-services.AddHttpClient<Checker>().AddStandardResilienceHandler();
+services.AddHttpClient<NuGetClient>().AddStandardResilienceHandler();
+services.AddTransient<Checker>();
 var serviceProvider = services.BuildServiceProvider();
 var checker = serviceProvider.GetRequiredService<Checker>();
 
@@ -62,11 +64,12 @@ var results = await checker.CheckAsync(
 
 // Output Table
 var table = new Table();
-table.AddColumn(nameof(PackageResult.Project));
-table.AddColumn(nameof(PackageResult.Package));
-table.AddColumn("Current");
-table.AddColumn("Latest");
-table.AddColumn("Status");
+table.Border(TableBorder.Square);
+table.AddColumn(new TableColumn(nameof(PackageResult.Project)).NoWrap());
+table.AddColumn(new TableColumn(nameof(PackageResult.Package)).NoWrap());
+table.AddColumn(new TableColumn("Current").NoWrap());
+table.AddColumn(new TableColumn("Latest").NoWrap());
+table.AddColumn(new TableColumn("Status").NoWrap());
 
 bool hasFailures = false;
 foreach (var r in results)

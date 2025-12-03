@@ -1,6 +1,7 @@
 using System.Net;
 using Moq;
 using Moq.Protected;
+using NugetOutdated.Services;
 using Xunit;
 
 namespace NugetOutdated.Tests;
@@ -23,7 +24,7 @@ public class CheckerTests : IDisposable
         }
     }
 
-    private HttpClient CreateMockHttpClient(string jsonResponse)
+    private Checker CreateChecker(string jsonResponse)
     {
         var mockHandler = new Mock<HttpMessageHandler>();
 
@@ -42,15 +43,17 @@ public class CheckerTests : IDisposable
                 }
             );
 
-        return new HttpClient(mockHandler.Object);
+        var httpClient = new HttpClient(mockHandler.Object);
+        var nuGetClient = new NuGetClient(httpClient);
+        
+        return new Checker(nuGetClient);
     }
 
     [Fact]
     public async Task CheckAsync_ReturnsEmpty_WhenNoCsprojFiles()
     {
         // Arrange
-        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1"]}""");
-        var checker = new Checker(httpClient);
+        var checker = CreateChecker("""{"versions": ["12.0.1", "13.0.1"]}""");
 
         // Act
         var results = await checker.CheckAsync(_testDir, new List<(string, string)>(), false);
@@ -72,8 +75,7 @@ public class CheckerTests : IDisposable
 """;
         File.WriteAllText(Path.Combine(_testDir, "TestProject.csproj"), csprojContent);
 
-        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1"]}""");
-        var checker = new Checker(httpClient);
+        var checker = CreateChecker("""{"versions": ["12.0.1", "13.0.1"]}""");
 
         // Act
         var results = await checker.CheckAsync(_testDir, new List<(string, string)>(), false);
@@ -101,8 +103,7 @@ public class CheckerTests : IDisposable
 """;
         File.WriteAllText(Path.Combine(_testDir, "TestProject.csproj"), csprojContent);
 
-        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1"]}""");
-        var checker = new Checker(httpClient);
+        var checker = CreateChecker("""{"versions": ["12.0.1", "13.0.1"]}""");
 
         // Act
         var results = await checker.CheckAsync(_testDir, new List<(string, string)>(), false);
@@ -134,8 +135,7 @@ public class CheckerTests : IDisposable
 """;
         File.WriteAllText(Path.Combine(_testDir, "TestProject.csproj"), csprojContent);
 
-        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1"]}""");
-        var checker = new Checker(httpClient);
+        var checker = CreateChecker("""{"versions": ["12.0.1", "13.0.1"]}""");
 
         // Act
         var results = await checker.CheckAsync(_testDir, new List<(string, string)>(), false);
@@ -170,8 +170,7 @@ public class CheckerTests : IDisposable
 """;
         File.WriteAllText(Path.Combine(_testDir, "TestProject.csproj"), csprojContent);
 
-        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1"]}""");
-        var checker = new Checker(httpClient);
+        var checker = CreateChecker("""{"versions": ["12.0.1", "13.0.1"]}""");
 
         // Act
         var results = await checker.CheckAsync(_testDir, new List<(string, string)>(), false);
@@ -198,8 +197,7 @@ public class CheckerTests : IDisposable
         File.WriteAllText(Path.Combine(_testDir, "TestProject.csproj"), csprojContent);
 
         // Only need response for Newtonsoft.Json as Serilog is ignored
-        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1"]}""");
-        var checker = new Checker(httpClient);
+        var checker = CreateChecker("""{"versions": ["12.0.1", "13.0.1"]}""");
         var ignoreList = new List<(string, string)> { ("TestProject", "Serilog") };
 
         // Act
@@ -231,8 +229,7 @@ public class CheckerTests : IDisposable
 """;
         File.WriteAllText(Path.Combine(_testDir, "TestProject.csproj"), csprojContent);
 
-        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1-beta1"]}""");
-        var checker = new Checker(httpClient);
+        var checker = CreateChecker("""{"versions": ["12.0.1", "13.0.1-beta1"]}""");
 
         // Act
         var results = await checker.CheckAsync(_testDir, new List<(string, string)>(), true);
@@ -257,8 +254,7 @@ public class CheckerTests : IDisposable
 """;
         File.WriteAllText(Path.Combine(_testDir, "AndyTV.csproj"), csprojContent);
 
-        var httpClient = CreateMockHttpClient("""{"versions": ["0.0.1298", "0.0.1300"]}""");
-        var checker = new Checker(httpClient);
+        var checker = CreateChecker("""{"versions": ["0.0.1298", "0.0.1300"]}""");
         var ignoreList = new List<(string, string)> { ("AndyTV", "Velopack") };
 
         // Act
