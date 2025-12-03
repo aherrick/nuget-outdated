@@ -143,30 +143,25 @@ public class Checker
                     if (string.IsNullOrEmpty(versionStr))
                         continue;
 
-                    // Check ignore list
-                    if (
-                        ignoreList.Any(x =>
-                            x.Project.Equals(projectName, StringComparison.OrdinalIgnoreCase)
-                            && x.Package.Equals(id, StringComparison.OrdinalIgnoreCase)
-                        )
-                    )
+                    bool isIgnored = ignoreList.Any(x =>
+                        x.Project.Equals(projectName, StringComparison.OrdinalIgnoreCase)
+                        && x.Package.Equals(id, StringComparison.OrdinalIgnoreCase)
+                    );
+
+                    if (!NuGetVersion.TryParse(versionStr, out var currentVersion))
                     {
-                        results.Add(
-                            new PackageResult
+                        if (isIgnored)
+                        {
+                            results.Add(new PackageResult
                             {
                                 Project = projectName,
                                 Package = id,
                                 CurrentVersion = versionStr,
                                 LatestVersion = string.Empty,
                                 IsUpToDate = true,
-                                IsIgnored = true,
-                            }
-                        );
-                        continue;
-                    }
-
-                    if (!NuGetVersion.TryParse(versionStr, out var currentVersion))
-                    {
+                                IsIgnored = true
+                            });
+                        }
                         // Skip if version is a variable or unparseable
                         continue;
                     }
@@ -176,7 +171,22 @@ public class Checker
 
                     if (latestVersion == null)
                     {
-                        Console.WriteLine($"Warning: Could not find package '{id}' on NuGet.org.");
+                        if (isIgnored)
+                        {
+                            results.Add(new PackageResult
+                            {
+                                Project = projectName,
+                                Package = id,
+                                CurrentVersion = currentVersion.ToString(),
+                                LatestVersion = string.Empty,
+                                IsUpToDate = true,
+                                IsIgnored = true
+                            });
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Warning: Could not find package '{id}' on NuGet.org.");
+                        }
                         continue;
                     }
 
@@ -190,6 +200,7 @@ public class Checker
                             CurrentVersion = currentVersion.ToString(),
                             LatestVersion = latestVersion.ToString(),
                             IsUpToDate = isUpToDate,
+                            IsIgnored = isIgnored,
                         }
                     );
                 }

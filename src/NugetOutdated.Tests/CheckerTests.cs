@@ -243,4 +243,35 @@ public class CheckerTests : IDisposable
         Assert.Equal("13.0.1-beta1", result.LatestVersion);
         Assert.False(result.IsUpToDate);
     }
+
+    [Fact]
+    public async Task CheckAsync_IgnoredPackage_ShowsLatestVersion()
+    {
+        // Arrange
+        var csprojContent = """
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Velopack" Version="0.0.1298" />
+  </ItemGroup>
+</Project>
+""";
+        File.WriteAllText(Path.Combine(_testDir, "AndyTV.csproj"), csprojContent);
+
+        var httpClient = CreateMockHttpClient("""{"versions": ["0.0.1298", "0.0.1300"]}""");
+        var checker = new Checker(httpClient);
+        var ignoreList = new List<(string, string)> { ("AndyTV", "Velopack") };
+
+        // Act
+        var results = await checker.CheckAsync(_testDir, ignoreList, false);
+
+        // Assert
+        Assert.Single(results);
+        var result = results[0];
+        Assert.Equal("AndyTV", result.Project);
+        Assert.Equal("Velopack", result.Package);
+        Assert.Equal("0.0.1298", result.CurrentVersion);
+        Assert.Equal("0.0.1300", result.LatestVersion);
+        Assert.True(result.IsIgnored);
+        Assert.False(result.IsUpToDate); // Package is outdated, but ignored
+    }
 }

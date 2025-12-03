@@ -35,7 +35,12 @@ if (!string.IsNullOrWhiteSpace(ignoreQuery))
             {
                 foreach (var val in values)
                 {
-                    ignoreList.Add((key, val));
+                    var projectName = key;
+                    if (projectName.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+                    {
+                        projectName = Path.GetFileNameWithoutExtension(projectName);
+                    }
+                    ignoreList.Add((projectName, val));
                 }
             }
         }
