@@ -6,15 +6,8 @@ using NugetOutdated.Services;
 
 namespace NugetOutdated;
 
-public class Checker
+public class Checker(NuGetClient nuGetClient)
 {
-    private readonly NuGetClient _nuGetClient;
-
-    public Checker(NuGetClient nuGetClient)
-    {
-        _nuGetClient = nuGetClient;
-    }
-
     public async Task<List<PackageResult>> CheckAsync(
         string directory,
         List<(string Project, string Package)> ignoreList,
@@ -42,7 +35,7 @@ public class Checker
             }
         );
 
-        return results.OrderBy(r => r.Project).ThenBy(r => r.Package).ToList();
+        return [.. results.OrderBy(r => r.Project).ThenBy(r => r.Package)];
     }
 
     private async Task<List<PackageResult>> ProcessProjectAsync(
@@ -81,7 +74,7 @@ public class Checker
                     continue;
                 }
 
-                var latestVersion = await _nuGetClient.GetLatestVersionAsync(id, includePrerelease);
+                var latestVersion = await nuGetClient.GetLatestVersionAsync(id, includePrerelease);
 
                 if (latestVersion == null && !isIgnored)
                 {
@@ -95,7 +88,7 @@ public class Checker
                         projectName,
                         id,
                         currentVersion.ToString(),
-                        latestVersion?.ToString(),
+                        latestVersion?.ToString() ?? string.Empty,
                         isUpToDate,
                         isIgnored
                     )
@@ -110,7 +103,7 @@ public class Checker
         return results;
     }
 
-    private string? ResolveVersion(
+    private static string ResolveVersion(
         XElement pkg,
         string id,
         string projectName,
@@ -137,7 +130,7 @@ public class Checker
         return null;
     }
 
-    private bool IsIgnored(
+    private static bool IsIgnored(
         string packageId,
         string projectName,
         List<(string Project, string Package)> ignoreList
@@ -149,11 +142,11 @@ public class Checker
         );
     }
 
-    private PackageResult CreateResult(
+    private static PackageResult CreateResult(
         string project,
         string package,
         string current,
-        string? latest,
+        string latest,
         bool isUpToDate,
         bool isIgnored
     )
