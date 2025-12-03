@@ -1,13 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using System.Web;
-using NuGet.Versioning;
+using Microsoft.Extensions.DependencyInjection;
 using NugetOutdated;
 using Spectre.Console;
 
@@ -50,12 +42,18 @@ if (!string.IsNullOrWhiteSpace(ignoreQuery))
     }
 }
 
-using var httpClient = new HttpClient();
-var checker = new Checker(httpClient);
+var services = new ServiceCollection();
+services.AddHttpClient<Checker>().AddStandardResilienceHandler();
+var serviceProvider = services.BuildServiceProvider();
+var checker = serviceProvider.GetRequiredService<Checker>();
 
 Console.WriteLine($"Checking packages in {Directory.GetCurrentDirectory()}...");
 
-var results = await checker.CheckAsync(Directory.GetCurrentDirectory(), ignoreList, includePrerelease);
+var results = await checker.CheckAsync(
+    Directory.GetCurrentDirectory(),
+    ignoreList,
+    includePrerelease
+);
 
 // Output Table
 var table = new Table();
@@ -78,14 +76,9 @@ foreach (var r in results)
         status = r.IsUpToDate ? "[green]✅[/]" : "[red]❌[/]";
     }
 
-    table.AddRow(
-        r.Project,
-        r.Package,
-        r.CurrentVersion,
-        r.LatestVersion,
-        status
-    );
-    if (!r.IsUpToDate && !r.IsIgnored) hasFailures = true;
+    table.AddRow(r.Project, r.Package, r.CurrentVersion, r.LatestVersion, status);
+    if (!r.IsUpToDate && !r.IsIgnored)
+        hasFailures = true;
 }
 
 AnsiConsole.Write(table);

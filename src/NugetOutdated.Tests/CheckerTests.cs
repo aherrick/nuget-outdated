@@ -1,13 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using Moq;
 using Moq.Protected;
-using NugetOutdated;
 using Xunit;
 
 namespace NugetOutdated.Tests;
@@ -30,12 +23,33 @@ public class CheckerTests : IDisposable
         }
     }
 
+    private HttpClient CreateMockHttpClient(string jsonResponse)
+    {
+        var mockHandler = new Mock<HttpMessageHandler>();
+
+        mockHandler
+            .Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            )
+            .ReturnsAsync(
+                new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent(jsonResponse),
+                }
+            );
+
+        return new HttpClient(mockHandler.Object);
+    }
+
     [Fact]
     public async Task CheckAsync_ReturnsEmpty_WhenNoCsprojFiles()
     {
         // Arrange
-        var mockHandler = new Mock<HttpMessageHandler>();
-        var httpClient = new HttpClient(mockHandler.Object);
+        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1"]}""");
         var checker = new Checker(httpClient);
 
         // Act
@@ -58,23 +72,7 @@ public class CheckerTests : IDisposable
 """;
         File.WriteAllText(Path.Combine(_testDir, "TestProject.csproj"), csprojContent);
 
-        var mockHandler = new Mock<HttpMessageHandler>();
-        mockHandler
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-            )
-            .ReturnsAsync(
-                new HttpResponseMessage
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent("""{"versions": ["12.0.1", "13.0.1"]}"""),
-                }
-            );
-
-        var httpClient = new HttpClient(mockHandler.Object);
+        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1"]}""");
         var checker = new Checker(httpClient);
 
         // Act
@@ -103,23 +101,7 @@ public class CheckerTests : IDisposable
 """;
         File.WriteAllText(Path.Combine(_testDir, "TestProject.csproj"), csprojContent);
 
-        var mockHandler = new Mock<HttpMessageHandler>();
-        mockHandler
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-            )
-            .ReturnsAsync(
-                new HttpResponseMessage
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent("""{"versions": ["12.0.1", "13.0.1"]}"""),
-                }
-            );
-
-        var httpClient = new HttpClient(mockHandler.Object);
+        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1"]}""");
         var checker = new Checker(httpClient);
 
         // Act
@@ -152,23 +134,7 @@ public class CheckerTests : IDisposable
 """;
         File.WriteAllText(Path.Combine(_testDir, "TestProject.csproj"), csprojContent);
 
-        var mockHandler = new Mock<HttpMessageHandler>();
-        mockHandler
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-            )
-            .ReturnsAsync(
-                new HttpResponseMessage
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent("""{"versions": ["12.0.1", "13.0.1"]}"""),
-                }
-            );
-
-        var httpClient = new HttpClient(mockHandler.Object);
+        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1"]}""");
         var checker = new Checker(httpClient);
 
         // Act
@@ -204,23 +170,7 @@ public class CheckerTests : IDisposable
 """;
         File.WriteAllText(Path.Combine(_testDir, "TestProject.csproj"), csprojContent);
 
-        var mockHandler = new Mock<HttpMessageHandler>();
-        mockHandler
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-            )
-            .ReturnsAsync(
-                new HttpResponseMessage
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent("""{"versions": ["12.0.1", "13.0.1"]}"""),
-                }
-            );
-
-        var httpClient = new HttpClient(mockHandler.Object);
+        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1"]}""");
         var checker = new Checker(httpClient);
 
         // Act
@@ -231,5 +181,66 @@ public class CheckerTests : IDisposable
         var result = results[0];
         Assert.Equal("Newtonsoft.Json", result.Package);
         Assert.Equal("12.0.1", result.CurrentVersion);
+    }
+
+    [Fact]
+    public async Task CheckAsync_IgnoresSpecifiedPackages()
+    {
+        // Arrange
+        var csprojContent = """
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+    <PackageReference Include="Serilog" Version="2.10.0" />
+  </ItemGroup>
+</Project>
+""";
+        File.WriteAllText(Path.Combine(_testDir, "TestProject.csproj"), csprojContent);
+
+        // Only need response for Newtonsoft.Json as Serilog is ignored
+        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1"]}""");
+        var checker = new Checker(httpClient);
+        var ignoreList = new List<(string, string)> { ("TestProject", "Serilog") };
+
+        // Act
+        var results = await checker.CheckAsync(_testDir, ignoreList, false);
+
+        // Assert
+        Assert.Equal(2, results.Count);
+
+        var ignored = results.Single(r => r.Package == "Serilog");
+        Assert.True(ignored.IsIgnored);
+        Assert.True(ignored.IsUpToDate);
+        Assert.Empty(ignored.LatestVersion);
+
+        var checkedPkg = results.Single(r => r.Package == "Newtonsoft.Json");
+        Assert.False(checkedPkg.IsIgnored);
+        Assert.Equal("13.0.1", checkedPkg.LatestVersion);
+    }
+
+    [Fact]
+    public async Task CheckAsync_SupportsPreReleaseVersions()
+    {
+        // Arrange
+        var csprojContent = """
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+  </ItemGroup>
+</Project>
+""";
+        File.WriteAllText(Path.Combine(_testDir, "TestProject.csproj"), csprojContent);
+
+        var httpClient = CreateMockHttpClient("""{"versions": ["12.0.1", "13.0.1-beta1"]}""");
+        var checker = new Checker(httpClient);
+
+        // Act
+        var results = await checker.CheckAsync(_testDir, new List<(string, string)>(), true);
+
+        // Assert
+        Assert.Single(results);
+        var result = results[0];
+        Assert.Equal("13.0.1-beta1", result.LatestVersion);
+        Assert.False(result.IsUpToDate);
     }
 }

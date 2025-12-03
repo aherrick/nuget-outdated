@@ -1,11 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using NuGet.Versioning;
 
@@ -22,8 +16,11 @@ public class Checker
 
     private class CpmSettings
     {
-        public Dictionary<string, string> GlobalVersions { get; } = new(StringComparer.OrdinalIgnoreCase);
-        public Dictionary<string, Dictionary<string, string>> ProjectVersions { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, string> GlobalVersions { get; } =
+            new(StringComparer.OrdinalIgnoreCase);
+
+        public Dictionary<string, Dictionary<string, string>> ProjectVersions { get; } =
+            new(StringComparer.OrdinalIgnoreCase);
     }
 
     private CpmSettings LoadCentralPackageManagement(string directory)
@@ -39,7 +36,8 @@ public class Checker
         try
         {
             var doc = XDocument.Load(propsFile);
-            var packageVersions = doc.Descendants().Where(e => e.Name.LocalName == "PackageVersion");
+            var packageVersions = doc.Descendants()
+                .Where(e => e.Name.LocalName == "PackageVersion");
 
             foreach (var pv in packageVersions)
             {
@@ -57,19 +55,26 @@ public class Checker
                 else
                 {
                     // Parse condition: Condition="'$(MSBuildProjectName)' == 'MyProject'"
-                    var match = Regex.Match(condition, @"'\$\(MSBuildProjectName\)'\s*==\s*'([^']+)'");
+                    var match = Regex.Match(
+                        condition,
+                        @"'\$\(MSBuildProjectName\)'\s*==\s*'([^']+)'"
+                    );
                     if (match.Success)
                     {
                         var projectName = match.Groups[1].Value;
                         if (!settings.ProjectVersions.ContainsKey(projectName))
                         {
-                            settings.ProjectVersions[projectName] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                            settings.ProjectVersions[projectName] = new Dictionary<string, string>(
+                                StringComparer.OrdinalIgnoreCase
+                            );
                         }
                         settings.ProjectVersions[projectName][id] = version;
                     }
                     else
                     {
-                        Console.WriteLine($"⚠️ Skipping complex PackageVersion condition: {condition}");
+                        Console.WriteLine(
+                            $"⚠️ Skipping complex PackageVersion condition: {condition}"
+                        );
                     }
                 }
             }
@@ -82,15 +87,15 @@ public class Checker
         return settings;
     }
 
-    public async Task<List<PackageResult>> CheckAsync(string directory, List<(string Project, string Package)> ignoreList, bool includePrerelease)
+    public async Task<List<PackageResult>> CheckAsync(
+        string directory,
+        List<(string Project, string Package)> ignoreList,
+        bool includePrerelease
+    )
     {
         var cpmSettings = LoadCentralPackageManagement(directory);
 
-        var csprojFiles = Directory.GetFiles(
-            directory,
-            "*.csproj",
-            SearchOption.AllDirectories
-        );
+        var csprojFiles = Directory.GetFiles(directory, "*.csproj", SearchOption.AllDirectories);
 
         var results = new List<PackageResult>();
 
@@ -120,8 +125,12 @@ public class Checker
                     if (string.IsNullOrEmpty(versionStr))
                     {
                         // Try to resolve from CPM
-                        if (cpmSettings.ProjectVersions.TryGetValue(projectName, out var projectVersions) &&
-                            projectVersions.TryGetValue(id, out var projectVersion))
+                        if (
+                            cpmSettings.ProjectVersions.TryGetValue(
+                                projectName,
+                                out var projectVersions
+                            ) && projectVersions.TryGetValue(id, out var projectVersion)
+                        )
                         {
                             versionStr = projectVersion;
                         }
@@ -150,7 +159,7 @@ public class Checker
                                 CurrentVersion = versionStr,
                                 LatestVersion = string.Empty,
                                 IsUpToDate = true,
-                                IsIgnored = true
+                                IsIgnored = true,
                             }
                         );
                         continue;
@@ -163,10 +172,7 @@ public class Checker
                     }
 
                     // Get latest version
-                    var latestVersion = await GetLatestVersionAsync(
-                        id,
-                        includePrerelease
-                    );
+                    var latestVersion = await GetLatestVersionAsync(id, includePrerelease);
 
                     if (latestVersion == null)
                     {
@@ -197,10 +203,7 @@ public class Checker
         return results;
     }
 
-    private async Task<NuGetVersion> GetLatestVersionAsync(
-        string packageId,
-        bool includePrerelease
-    )
+    private async Task<NuGetVersion> GetLatestVersionAsync(string packageId, bool includePrerelease)
     {
         try
         {
