@@ -25,14 +25,22 @@ public class Checker
         var csprojFiles = Directory.GetFiles(directory, "*.csproj", SearchOption.AllDirectories);
         var results = new ConcurrentBag<PackageResult>();
 
-        await Parallel.ForEachAsync(csprojFiles, async (file, ct) =>
-        {
-            var projectResults = await ProcessProjectAsync(file, cpmSettings, ignoreList, includePrerelease);
-            foreach (var result in projectResults)
+        await Parallel.ForEachAsync(
+            csprojFiles,
+            async (file, ct) =>
             {
-                results.Add(result);
+                var projectResults = await ProcessProjectAsync(
+                    file,
+                    cpmSettings,
+                    ignoreList,
+                    includePrerelease
+                );
+                foreach (var result in projectResults)
+                {
+                    results.Add(result);
+                }
             }
-        });
+        );
 
         return results.OrderBy(r => r.Project).ThenBy(r => r.Package).ToList();
     }
@@ -41,7 +49,8 @@ public class Checker
         string filePath,
         CpmSettings cpmSettings,
         List<(string Project, string Package)> ignoreList,
-        bool includePrerelease)
+        bool includePrerelease
+    )
     {
         var results = new List<PackageResult>();
         var projectName = Path.GetFileNameWithoutExtension(filePath);
@@ -54,10 +63,12 @@ public class Checker
             foreach (var pkg in packages)
             {
                 var id = pkg.Attribute("Include")?.Value;
-                if (string.IsNullOrEmpty(id)) continue;
+                if (string.IsNullOrEmpty(id))
+                    continue;
 
                 var versionStr = ResolveVersion(pkg, id, projectName, cpmSettings);
-                if (string.IsNullOrEmpty(versionStr)) continue;
+                if (string.IsNullOrEmpty(versionStr))
+                    continue;
 
                 var isIgnored = IsIgnored(id, projectName, ignoreList);
 
@@ -79,7 +90,16 @@ public class Checker
                 }
 
                 bool isUpToDate = latestVersion == null || currentVersion >= latestVersion;
-                results.Add(CreateResult(projectName, id, currentVersion.ToString(), latestVersion?.ToString(), isUpToDate, isIgnored));
+                results.Add(
+                    CreateResult(
+                        projectName,
+                        id,
+                        currentVersion.ToString(),
+                        latestVersion?.ToString(),
+                        isUpToDate,
+                        isIgnored
+                    )
+                );
             }
         }
         catch (Exception ex)
@@ -90,13 +110,21 @@ public class Checker
         return results;
     }
 
-    private string? ResolveVersion(XElement pkg, string id, string projectName, CpmSettings cpmSettings)
+    private string? ResolveVersion(
+        XElement pkg,
+        string id,
+        string projectName,
+        CpmSettings cpmSettings
+    )
     {
         var version = pkg.Attribute("Version")?.Value;
-        if (!string.IsNullOrEmpty(version)) return version;
+        if (!string.IsNullOrEmpty(version))
+            return version;
 
-        if (cpmSettings.ProjectVersions.TryGetValue(projectName, out var projectVersions) &&
-            projectVersions.TryGetValue(id, out var projectVersion))
+        if (
+            cpmSettings.ProjectVersions.TryGetValue(projectName, out var projectVersions)
+            && projectVersions.TryGetValue(id, out var projectVersion)
+        )
         {
             return projectVersion;
         }
@@ -109,7 +137,11 @@ public class Checker
         return null;
     }
 
-    private bool IsIgnored(string packageId, string projectName, List<(string Project, string Package)> ignoreList)
+    private bool IsIgnored(
+        string packageId,
+        string projectName,
+        List<(string Project, string Package)> ignoreList
+    )
     {
         return ignoreList.Any(x =>
             x.Project.Equals(projectName, StringComparison.OrdinalIgnoreCase)
@@ -117,7 +149,14 @@ public class Checker
         );
     }
 
-    private PackageResult CreateResult(string project, string package, string current, string? latest, bool isUpToDate, bool isIgnored)
+    private PackageResult CreateResult(
+        string project,
+        string package,
+        string current,
+        string? latest,
+        bool isUpToDate,
+        bool isIgnored
+    )
     {
         return new PackageResult
         {
@@ -126,7 +165,7 @@ public class Checker
             CurrentVersion = current,
             LatestVersion = latest ?? string.Empty,
             IsUpToDate = isUpToDate,
-            IsIgnored = isIgnored
+            IsIgnored = isIgnored,
         };
     }
 }

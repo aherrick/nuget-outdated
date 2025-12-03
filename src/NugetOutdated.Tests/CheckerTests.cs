@@ -45,7 +45,7 @@ public class CheckerTests : IDisposable
 
         var httpClient = new HttpClient(mockHandler.Object);
         var nuGetClient = new NuGetClient(httpClient);
-        
+
         return new Checker(nuGetClient);
     }
 

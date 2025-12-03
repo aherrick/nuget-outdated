@@ -45,9 +45,16 @@ public partial class CpmParser
                     if (match.Success)
                     {
                         var projectName = match.Groups[1].Value;
-                        if (!settings.ProjectVersions.TryGetValue(projectName, out var projectVersions))
+                        if (
+                            !settings.ProjectVersions.TryGetValue(
+                                projectName,
+                                out var projectVersions
+                            )
+                        )
                         {
-                            projectVersions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                            projectVersions = new Dictionary<string, string>(
+                                StringComparer.OrdinalIgnoreCase
+                            );
                             settings.ProjectVersions[projectName] = projectVersions;
                         }
                         projectVersions[id] = version;

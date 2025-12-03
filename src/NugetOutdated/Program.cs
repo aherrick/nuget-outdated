@@ -17,7 +17,10 @@ for (int i = 0; i < args.Length; i++)
     }
     else if (args[i] == "--includeprelease" && i + 1 < args.Length)
     {
-        bool.TryParse(args[i + 1], out includePrerelease);
+        if (bool.TryParse(args[i + 1], out var result))
+        {
+            includePrerelease = result;
+        }
         i++;
     }
 }
@@ -74,17 +77,7 @@ table.AddColumn(new TableColumn("Status").NoWrap());
 bool hasFailures = false;
 foreach (var r in results)
 {
-    string status;
-    if (r.IsIgnored)
-    {
-        status = "[grey]🔒[/]";
-    }
-    else
-    {
-        status = r.IsUpToDate ? "[green]✅[/]" : "[red]❌[/]";
-    }
-
-    table.AddRow(r.Project, r.Package, r.CurrentVersion, r.LatestVersion, status);
+    table.AddRow(r.Project, r.Package, r.CurrentVersion, r.LatestVersion, r.Status);
     if (!r.IsUpToDate && !r.IsIgnored)
         hasFailures = true;
 }
