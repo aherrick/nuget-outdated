@@ -69,7 +69,16 @@ public class Checker(NuGetClient nuGetClient)
                 {
                     if (isIgnored)
                     {
-                        results.Add(CreateResult(projectName, id, versionStr, null, true, true));
+                        results.Add(
+                            new PackageResult(
+                                projectName,
+                                id,
+                                versionStr,
+                                string.Empty,
+                                true,
+                                true
+                            )
+                        );
                     }
                     continue;
                 }
@@ -84,7 +93,7 @@ public class Checker(NuGetClient nuGetClient)
 
                 bool isUpToDate = latestVersion == null || currentVersion >= latestVersion;
                 results.Add(
-                    CreateResult(
+                    new PackageResult(
                         projectName,
                         id,
                         currentVersion.ToString(),
@@ -140,25 +149,5 @@ public class Checker(NuGetClient nuGetClient)
             x.Project.Equals(projectName, StringComparison.OrdinalIgnoreCase)
             && x.Package.Equals(packageId, StringComparison.OrdinalIgnoreCase)
         );
-    }
-
-    private static PackageResult CreateResult(
-        string project,
-        string package,
-        string current,
-        string latest,
-        bool isUpToDate,
-        bool isIgnored
-    )
-    {
-        return new PackageResult
-        {
-            Project = project,
-            Package = package,
-            CurrentVersion = current,
-            LatestVersion = latest ?? string.Empty,
-            IsUpToDate = isUpToDate,
-            IsIgnored = isIgnored,
-        };
     }
 }
